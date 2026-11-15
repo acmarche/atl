@@ -65,6 +65,11 @@ class FactureCronHandler
             );
             $i = 0;
             foreach ($factures as $facture) {
+                // Quota atteint : le reste part au prochain passage (testé avant de générer le pdf)
+                if ($i >= $max) {
+                    break;
+                }
+
                 $messageFacture = clone $messageBase; //sinon attachs multiple
 
                 try {
@@ -120,9 +125,6 @@ class FactureCronHandler
                 $facture->setEnvoyeLe(new \DateTime());
                 $this->factureRepository->flush();
                 ++$i;
-                if ($i > $max) {
-                    break;
-                }
             }
             $result[] = ['message' => 'count '.$i];
             //$cron->addResult($result);

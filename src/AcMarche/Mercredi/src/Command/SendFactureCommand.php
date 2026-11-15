@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Lock\LockFactory;
 
 #[AsCommand(
@@ -20,18 +21,27 @@ class SendFactureCommand extends Command
     public function __construct(
         private readonly FactureCronHandler $factureCronHandler,
         private readonly LockFactory $lockFactory,
+        #[Autowire('%env(int:FACTURE_SEND_MAX)%')]
+        private readonly int $defaultMax,
     ) {
         parent::__construct();
     }
 
     protected function configure(): void
     {
-        $this->addOption('max', null, InputOption::VALUE_REQUIRED, 'Nombre maximum de factures envoyées par exécution', 40);
+        $this->addOption('max', null, InputOption::VALUE_REQUIRED, 'Nombre maximum de factures envoyées par exécution (défaut : FACTURE_SEND_MAX)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+
+        $max = $input->getOption('max') ?? $this->defaultMax;
+        if (false === filter_var($max, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
+            $io->error(\sprintf('Le nombre maximum de factures doit être un entier >= 1 (reçu : %s).', $max));
+
+            return Command::INVALID;
+        }
 
         // Une exécution peut durer jusqu'à 60 minutes chez l'hébergeur
         $lock = $this->lockFactory->createLock('mercredi-facture-send', 3600);
@@ -43,7 +53,7 @@ class SendFactureCommand extends Command
 
         $failed = false;
         try {
-            $result = $this->factureCronHandler->execute((int) $input->getOption('max'));
+            $result = $this->factureCronHandler->execute((int) $max);
         } catch (\Throwable $exception) {
             $failed = true;
             $result = [['error' => $exception::class.': '.$exception->getMessage()]];

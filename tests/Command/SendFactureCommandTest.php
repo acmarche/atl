@@ -34,6 +34,35 @@ final class SendFactureCommandTest extends KernelTestCase
         self::assertSame(Command::SUCCESS, $this->createTester($handler)->execute([]));
     }
 
+    public function testDefaultMaxComesFromEnv(): void
+    {
+        $previous = [$_SERVER['FACTURE_SEND_MAX'] ?? null, $_ENV['FACTURE_SEND_MAX'] ?? null];
+        $_SERVER['FACTURE_SEND_MAX'] = $_ENV['FACTURE_SEND_MAX'] = '7';
+
+        try {
+            $handler = $this->createMock(FactureCronHandler::class);
+            $handler->expects(self::once())->method('execute')->with(7)->willReturn([]);
+
+            self::assertSame(Command::SUCCESS, $this->createTester($handler)->execute([]));
+        } finally {
+            [$_SERVER['FACTURE_SEND_MAX'], $_ENV['FACTURE_SEND_MAX']] = $previous;
+        }
+    }
+
+    #[\PHPUnit\Framework\Attributes\TestWith(['0'])]
+    #[\PHPUnit\Framework\Attributes\TestWith(['-3'])]
+    #[\PHPUnit\Framework\Attributes\TestWith(['abc'])]
+    public function testRejectsInvalidMax(string $max): void
+    {
+        $handler = $this->createMock(FactureCronHandler::class);
+        $handler->expects(self::never())->method('execute');
+
+        $tester = $this->createTester($handler);
+
+        self::assertSame(Command::INVALID, $tester->execute(['--max' => $max]));
+        self::assertStringContainsString('entier >= 1', $tester->getDisplay());
+    }
+
     public function testFailureIsReported(): void
     {
         $handler = $this->createMock(FactureCronHandler::class);
