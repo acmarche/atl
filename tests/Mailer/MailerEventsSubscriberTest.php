@@ -20,4 +20,32 @@ final class MailerEventsSubscriberTest extends KernelTestCase
         self::assertInstanceOf(Logger::class, $logger);
         self::assertSame('mail', $logger->getName());
     }
+
+    public function testSeparatesRecipientsInSentLog(): void
+    {
+        $logger = new class extends \Psr\Log\AbstractLogger {
+            public array $messages = [];
+
+            public function log($level, \Stringable|string $message, array $context = []): void
+            {
+                $this->messages[] = (string) $message;
+            }
+        };
+
+        $email = (new \Symfony\Component\Mime\Email())
+            ->from('sender@example.com')
+            ->to('a@example.com', 'b@example.com')
+            ->text('body');
+        $envelope = \Symfony\Component\Mailer\Envelope::create($email);
+        $sent = new \Symfony\Component\Mailer\SentMessage($email, $envelope);
+
+        (new MailerEventsSubscriber($logger))->onMessageSent(
+            new \Symfony\Component\Mailer\Event\SentMessageEvent($sent)
+        );
+
+        self::assertSame(
+            ['[MERCREDI] Mail sent from sender@example.com to a@example.com, b@example.com'],
+            $logger->messages
+        );
+    }
 }

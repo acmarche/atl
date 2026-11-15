@@ -31,11 +31,10 @@ class MailerEventsSubscriber implements EventSubscriberInterface
     public function onMessageSent(SentMessageEvent $event): void
     {
         $message = $event->getMessage();
-        $recipients = $message->getEnvelope()->getRecipients();
-        $to = '';
-        foreach ($recipients as $recipient) {
-            $to .= $recipient->toString();
-        }
+        $to = implode(', ', array_map(
+            static fn ($recipient) => $recipient->toString(),
+            $message->getEnvelope()->getRecipients()
+        ));
         $from = $message->getEnvelope()->getSender();
         $this->mercredilogger->info("[MERCREDI] Mail sent from ".$from->toString()." to ".$to);
     }
