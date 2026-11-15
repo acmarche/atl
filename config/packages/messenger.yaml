@@ -1,0 +1,29 @@
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            # https://symfony.com/doc/current/messenger.html#transport-configuration
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                retry_strategy:
+                    max_retries: 3
+                    multiplier: 2
+                # Stay under the hosting's hourly mail limit (see rate_limiter.php)
+                rate_limiter: mailer
+            failed: 'doctrine://default?queue_name=failed'
+            # sync: 'sync://'
+
+        default_bus: messenger.bus.default
+
+        buses:
+            messenger.bus.default: []
+
+        routing:
+            # Mails are sent directly (SendEmailMessage is not routed). Mass mailings
+            # are queued explicitly on "async" by AcMarche\Mercredi\Mailer\BulkMailer.
+            Symfony\Component\Notifier\Message\ChatMessage: async
+            Symfony\Component\Notifier\Message\SmsMessage: async
+
+            # Route your messages to the transports
+            # 'App\Message\YourMessage': async
