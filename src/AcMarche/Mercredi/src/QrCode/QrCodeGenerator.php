@@ -10,6 +10,7 @@ use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\Writer\PngWriter;
 use Knp\DoctrineBehaviors\Exception\ShouldNotHappenException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -92,6 +93,7 @@ class QrCodeGenerator
         $result = $qrCode->build();
 
         try {
+            (new Filesystem())->mkdir($directory);
             $result->saveToFile($directory.$fileName);
         } catch (\Exception $exception) {
             throw new \Exception($exception->getMessage());
