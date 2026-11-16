@@ -8,6 +8,7 @@ use AcMarche\Mercredi\Registration\Message\RegisterCreated;
 use AcMarche\Mercredi\Registration\MessageHandler\RegisterCreatedHandler;
 use AcMarche\Mercredi\Spam\Handler\SpamHandler;
 use AcMarche\Mercredi\User\Repository\UserRepository;
+use Psr\Log\LoggerInterface;
 use ReCaptcha\ReCaptcha;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -29,7 +30,14 @@ final class RegistrationController extends AbstractController
         private UserRepository $userRepository,
         private SpamHandler $spamHandler,
         private MessageBusInterface $dispatcher,
+        private LoggerInterface $logger,
     ) {}
+
+    /**
+     * reCAPTCHA v3 never blocks by itself: it only scores the visitor from 0.0 (robot)
+     * to 1.0 (human), the score has to be checked here.
+     */
+    private const float RECAPTCHA_MIN_SCORE = 0.5;
 
     #[Route(path: '/register', name: 'mercredi_front_register')]
     public function register(Request $request): Response
@@ -44,9 +52,17 @@ final class RegistrationController extends AbstractController
                 return $this->redirectToRoute('mercredi_front_home');
             }
 
-            $recaptcha = new ReCaptcha($this->reCaptchaSecretKey);
+            $recaptcha = new ReCaptcha($this->reCaptchaSecretKey)
+                ->setExpectedAction('submit')
+                ->setScoreThreshold(self::RECAPTCHA_MIN_SCORE);
             $response = $recaptcha->verify($request->request->getString('g-recaptcha-response'), $request->getClientIp());
             if (!$response->isSuccess()) {
+                $this->logger->warning('Registration refused by reCAPTCHA', [
+                    'errors' => $response->getErrorCodes(),
+                    'score' => $response->getScore(),
+                    'ip' => $request->getClientIp(),
+                    'email' => $user->getEmail(),
+                ]);
                 $this->addFlash('danger', 'Filtre anti-spam invalide.');
 
                 return $this->redirectToRoute('mercredi_front_home');

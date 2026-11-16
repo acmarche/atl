@@ -22,6 +22,10 @@
     <div class="col-6">
         {{ form_row(form.agreeTerms) }}
     </div>
+    {# Honeypot: off-screen for humans, robots fill it in #}
+    <div aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;">
+        {{ form_row(form.code_parrainage) }}
+    </div>
 </div>
 <button class="btn btn-primary mr-1 mb-2" type="button"
         id="recaptcha-btn"
