@@ -28,7 +28,8 @@ class UserChecker implements UserCheckerInterface
 
     public static function check(UserInterface $user): array
     {
-        if ($user->getRoles() < 1) {
+        // getRoles() always adds ROLE_USER, which is not a real role here
+        if ([] === array_diff($user->getRoles(), ['ROLE_USER'])) {
             return [
                 'error' => 'Aucun rôle, veuillez associer un rôle',
                 'user' => $user,

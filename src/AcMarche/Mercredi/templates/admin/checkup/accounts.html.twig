@@ -13,7 +13,10 @@
             <table class="table table-bordered table-hover">
                 <thead>
                 <tr>
-                    <th>User</th>
+                    <th>Utilisateur</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Date de création</th>
                     <th>Problème</th>
                 </tr>
                 </thead>
@@ -25,6 +28,9 @@
                                 {{ data.user.username }}
                             </a>
                         </td>
+                        <td>{{ data.user.nom }}</td>
+                        <td>{{ data.user.prenom }}</td>
+                        <td>{{ data.user.createdAt ? data.user.createdAt|date('d/m/Y') }}</td>
                         <td>{{ data.error }}</td>
                     </tr>
                 {% endfor %}
