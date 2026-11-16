@@ -97,6 +97,7 @@ final class CheckupController extends AbstractController
                 $bad[] = $check;
             }
         }
+        usort($bad, static fn (array $a, array $b): int => $a['user']->getCreatedAt() <=> $b['user']->getCreatedAt());
 
         return $this->render(
             '@AcMarcheMercrediAdmin/checkup/accounts.html.twig',
