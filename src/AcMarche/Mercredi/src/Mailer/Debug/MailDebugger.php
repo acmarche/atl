@@ -55,10 +55,14 @@ final class MailDebugger
 
     /**
      * The mailer DSN with the password hidden.
+     *
+     * Everything between the first ":" of the credentials and the last "@" is masked, so the
+     * password stays hidden even when the user is a raw e-mail address (user@domain:pass@host)
+     * or the password itself contains "@" or ":".
      */
     public function maskedDsn(): string
     {
-        return preg_replace('#(://[^:/@]*:)[^@]*@#', '$1****@', $this->mailerDsn) ?? '';
+        return preg_replace('~(://[^:/?#]*:).*@~s', '$1****@', $this->mailerDsn) ?? '';
     }
 
     /**

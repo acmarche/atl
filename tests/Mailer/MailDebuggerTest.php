@@ -60,13 +60,20 @@ final class MailDebuggerTest extends KernelTestCase
         self::assertStringNotContainsString('secret', $this->debugger->maskedDsn());
     }
 
-    public function testMasksThePasswordOfTheDsn(): void
+    #[\PHPUnit\Framework\Attributes\TestWith(['smtp://user%40x.be:secret@ssl0.ovh.net:465', 'smtp://user%40x.be:****@ssl0.ovh.net:465'])]
+    #[\PHPUnit\Framework\Attributes\TestWith(['smtp://user@x.be:secret@ssl0.ovh.net:587', 'smtp://user@x.be:****@ssl0.ovh.net:587'], 'raw e-mail address as user')]
+    #[\PHPUnit\Framework\Attributes\TestWith(['smtp://user:se@cr:et%!@ssl0.ovh.net:587', 'smtp://user:****@ssl0.ovh.net:587'], 'password with @ and :')]
+    #[\PHPUnit\Framework\Attributes\TestWith(['smtp://user@x.be:se@cret@ssl0.ovh.net:587?verify_peer=0', 'smtp://user@x.be:****@ssl0.ovh.net:587?verify_peer=0'])]
+    #[\PHPUnit\Framework\Attributes\TestWith(['ovh://default', 'ovh://default'])]
+    #[\PHPUnit\Framework\Attributes\TestWith(['null://null', 'null://null'])]
+    public function testMasksThePasswordOfTheDsn(string $dsn, string $expected): void
     {
         $debugger = new \ReflectionClass(MailDebugger::class);
         $instance = $debugger->newInstanceWithoutConstructor();
-        $debugger->getProperty('mailerDsn')->setValue($instance, 'smtp://user%40x.be:secret@ssl0.ovh.net:465');
+        $debugger->getProperty('mailerDsn')->setValue($instance, $dsn);
 
-        self::assertSame('smtp://user%40x.be:****@ssl0.ovh.net:465', $instance->maskedDsn());
+        self::assertSame($expected, $instance->maskedDsn());
+        self::assertStringNotContainsString('cret', $instance->maskedDsn());
     }
 
     public function testSendsDirectlyAndReportsSuccess(): void
