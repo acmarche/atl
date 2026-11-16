@@ -1,3 +1,7 @@
+{# Tarifs réellement facturés, repris des lignes de la facture #}
+{% macro tarifs(prix) -%}
+    {% for montant in prix %}{{ montant | format_currency('EUR') }}{{ not loop.last ? ', ' }}{% endfor %}
+{%- endmacro %}
 <div class="card">
     <div class="card-body" style="padding-bottom: 0;">
         <table class="table" style="margin-bottom: 0;">
@@ -66,8 +70,7 @@
                 <tr>
                     <td>
                         Accueils matin<br/>
-                        ≤ 7h29={{ getPrice('accueil',1) }} € &7h30 -
-                        8h = {{ getPrice('accueil',1) }}€
+                        {{ _self.tarifs(prix.accueil) }} la demi-heure
                     </td>
                     {% for row in data.enfants %}
                         <td>{{ row.accueils.Matin.nb }} demi-heure(s)</td>
@@ -76,8 +79,7 @@
                 <tr>
                     <td>
                         Accueils soir <br/>
-                        ≤ 17h = {{ getPrice('accueil',1) }} € & Après
-                        17h = {{ getPrice('accueil',1) }} €/demi-heure
+                        {{ _self.tarifs(prix.accueil) }} la demi-heure
                     </td>
                     {% for row in data.enfants %}
                         <td>{{ row.accueils.Soir.nb }} demi-heure(s)</td>
@@ -88,7 +90,7 @@
                 <tr>
                     <td>
                         Journée pédagogique<br/>
-                        1 journée = 5,00 € & 1/2 journée = 2,50 €
+                        {% if prix.peda %}{{ _self.tarifs(prix.peda) }} (journée ou 1/2 journée){% endif %}
                     </td>
                     {% for row in data.enfants %}
                         <td>{{ row.peda }}</td>
@@ -97,8 +99,7 @@
                 <tr>
                     <td>
                         Mercredis récréatifs<br/>
-                        {{ getPrice('presence',1) }} €, {{ getPrice('presence',2) }} €, {{ getPrice('presence',3) }} €
-                        (selon le nbre d'enfants)
+                        {% if prix.mercredi %}{{ _self.tarifs(prix.mercredi) }} (selon le nbre d'enfants){% endif %}
                     </td>
                     {% for row in data.enfants %}
                         <td>{{ row.mercredi }}</td>

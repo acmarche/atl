@@ -138,6 +138,15 @@ class FacturePdfPresenceHotton implements FacturePdfPresenceInterface
                 'tuteur' => $tuteur,
                 'organisation' => $organisation,
                 'data' => $data,
+                'prix' => [
+                    'accueil' => $this->prixFactures($factureAccueils),
+                    'mercredi' => $this->prixFactures(
+                        array_filter($facturePresences, static fn (FacturePresence $fp): bool => !$fp->isPedagogique())
+                    ),
+                    'peda' => $this->prixFactures(
+                        array_filter($facturePresences, static fn (FacturePresence $fp): bool => $fp->isPedagogique())
+                    ),
+                ],
                 'countAccueils' => \count($factureAccueils),
                 'countPresences' => \count($facturePresences),
                 'factureReductions' => $factureReductions,
@@ -147,6 +156,27 @@ class FacturePdfPresenceHotton implements FacturePdfPresenceInterface
                 'imgQrcode' => $imgQrcode,
             ],
         );
+    }
+
+    /**
+     * Prix unitaires réellement facturés (prix de base, avant réduction), du plus élevé
+     * au plus bas. Ils sont lus sur les lignes de la facture et non dans la configuration :
+     * le tarif affiché est toujours celui qui a servi au calcul, même si les prix changent.
+     *
+     * @param iterable<FacturePresence> $facturePresences
+     *
+     * @return list<float>
+     */
+    private function prixFactures(iterable $facturePresences): array
+    {
+        $prix = [];
+        foreach ($facturePresences as $facturePresence) {
+            $coutBrut = (float) $facturePresence->getCoutBrut();
+            $prix[number_format($coutBrut, 2, '.', '')] = $coutBrut;
+        }
+        rsort($prix);
+
+        return $prix;
     }
 
     private function groupAccueils(FacturePresence $facturePresence, array $data): array

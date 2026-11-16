@@ -39,7 +39,6 @@ final class MercrediExtension extends AbstractExtension
     {
         return [
             new TwigFunction('inIds', fn(int $number, array $objects) => $this->inIds($number, $objects)),
-            new TwigFunction('getPrice', fn(string $type, int $number) => $this->getPrice($type, $number)),
         ];
     }
 
@@ -58,27 +57,5 @@ final class MercrediExtension extends AbstractExtension
         $ids = array_map(fn($object) => $object->getId(), $objects);
 
         return \in_array($number, $ids, true);
-    }
-
-    /**
-     * @param string $type presence ou plaine ou accueil
-     * @param int $number
-     * @return string
-     */
-    private function getPrice(string $type, int $number): string
-    {
-        if ($type === 'accueil') {
-            $urn = 'MERCREDI_ACCUEIL_PRIX';
-        } else {
-            //MERCREDI_PRESENCE_PRIX1
-            $urn = 'MERCREDI_'.strtoupper($type).'_PRIX'.$number;
-        }
-
-        $env = getenv($urn);
-        if ($env) {
-            return $env;
-        }
-
-        return 'price not found';
     }
 }
