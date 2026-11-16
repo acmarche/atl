@@ -89,6 +89,7 @@ final class FactureSendController extends AbstractController
                 $this->mailerTransport->send($message);
                 $facture->setEnvoyeA($data['to']);
                 $facture->setEnvoyeLe(new DateTime());
+                $facture->setEnvoiResultat(Facture::ENVOI_OK);
                 $this->addFlash('success', 'La facture a bien été envoyée');
                 $this->factureRepository->flush();
             } catch (\Exception $exception) {
@@ -140,14 +141,20 @@ final class FactureSendController extends AbstractController
                 $this->factureCronRepository->persist($cron);
             }
             $cron->force_send = $data['force'];
-            $this->factureCronRepository->flush();
+            // Relance : la tâche repart, y compris si elle était déjà terminée
+            $cron->setDone(false);
+            $cron->results = [];
 
-            if ($cron->force_send) {
-                foreach ($factures as $facture) {
+            foreach ($factures as $facture) {
+                if ($cron->force_send) {
                     $facture->setEnvoyeLe(null);
-                    $this->factureRepository->flush();
+                }
+                // Les factures restées en erreur sont retentées
+                if (null === $facture->getEnvoyeLe()) {
+                    $facture->resetEnvoi();
                 }
             }
+            $this->factureCronRepository->flush();
 
             return $this->redirectToRoute(
                 'mercredi_admin_facture_cron_launch',

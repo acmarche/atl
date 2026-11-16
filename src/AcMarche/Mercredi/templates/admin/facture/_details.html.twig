@@ -41,6 +41,12 @@
                 <th>Envoyé à</th>
                 <td>{{ facture.envoyeA }}</td>
             </tr>
+            {% if facture.hasEnvoiErreur %}
+                <tr>
+                    <th>Erreur d'envoi</th>
+                    <td class="text-danger">{{ facture.envoiResultat }}</td>
+                </tr>
+            {% endif %}
             <tr>
                 <th>Payé le</th>
                 <td>

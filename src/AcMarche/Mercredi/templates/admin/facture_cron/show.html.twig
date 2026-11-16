@@ -36,11 +36,34 @@
 
             {{ factureCron.body|nl2br }}
 
-            {% if factureCron.results | length > 0 %}
-                <h4 class="text-success">Résultats des envois</h4>
-                {% for result in factureCron.results %}
-                    {{ result|join('') }}
-                {% endfor %}
+            {% if factureCron.results.envoyees is defined %}
+                <h4 class="text-success mt-3">Résultats des envois</h4>
+                <p>
+                    Factures envoyées : {{ factureCron.results.envoyees }}<br/>
+                    Factures en erreur : {{ factureCron.results.erreurs|length }}
+                </p>
+                {% if factureCron.results.erreurs|length > 0 %}
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Facture</th>
+                            <th>Tuteur</th>
+                            <th>Erreur</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for erreur in factureCron.results.erreurs %}
+                            <tr>
+                                <td>
+                                    <a href="{{ path('mercredi_admin_facture_show', {'id': erreur.facture}) }}">{{ erreur.facture }}</a>
+                                </td>
+                                <td>{{ erreur.tuteur }}</td>
+                                <td class="text-danger">{{ erreur.erreur }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
             {% endif %}
 
         </div>

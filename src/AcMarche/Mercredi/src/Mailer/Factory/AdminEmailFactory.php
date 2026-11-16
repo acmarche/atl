@@ -3,6 +3,7 @@
 namespace AcMarche\Mercredi\Mailer\Factory;
 
 use AcMarche\Mercredi\Entity\Enfant;
+use AcMarche\Mercredi\Entity\Facture\FactureCron;
 use AcMarche\Mercredi\Entity\Security\User;
 use AcMarche\Mercredi\Entity\Tuteur;
 use AcMarche\Mercredi\Mailer\TemplatedEmailFactory;
@@ -86,6 +87,42 @@ class AdminEmailFactory
             ->to($this->getEmailContact())
             ->subject($subject)
             ->text($texte);
+
+        return $message;
+    }
+
+    /**
+     * Résumé envoyé à l'adresse d'expédition quand tous les envois du mois sont traités.
+     *
+     * @param array{envoyees: int, erreurs: list<array{facture: int, tuteur: string, erreur: string}>} $resume
+     */
+    public function messageFactureCronResume(FactureCron $cron, array $resume): TemplatedEmail
+    {
+        $to = $cron->getFromAdresse();
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            $to = $this->getEmailContact();
+        }
+
+        $lines = [
+            'L\'envoi des factures de '.$cron->getMonthDate().' est terminé.',
+            '',
+            'Factures envoyées : '.$resume['envoyees'],
+            'Factures en erreur : '.\count($resume['erreurs']),
+        ];
+        if ([] !== $resume['erreurs']) {
+            $lines[] = '';
+            $lines[] = 'Ces factures n\'ont pas été envoyées :';
+            foreach ($resume['erreurs'] as $erreur) {
+                $lines[] = \sprintf('- Facture %d (%s) : %s', $erreur['facture'], $erreur['tuteur'], $erreur['erreur']);
+            }
+        }
+
+        $message = TemplatedEmailFactory::asPublicEmailJf();
+        $message
+            ->from($this->getEmailSenderAddress())
+            ->to($to)
+            ->subject('Résultat de l\'envoi des factures '.$cron->getMonthDate())
+            ->text(implode("\n", $lines));
 
         return $message;
     }

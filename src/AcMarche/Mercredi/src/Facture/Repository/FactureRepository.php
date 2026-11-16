@@ -119,7 +119,35 @@ final class FactureRepository extends ServiceEntityRepository
             ->setParameter('mois', $month)
             ->andWhere('facture.payeLe IS NULL')
             ->andWhere('facture.envoyeLe IS NULL')
+            ->andWhere('facture.envoiResultat IS NULL')
             ->getQuery()->getResult();
+    }
+
+    /**
+     * Factures du mois dont l'envoi a été abandonné sur une erreur.
+     *
+     * @return Facture[]
+     */
+    public function findFacturesByMonthWithSendError(string $month): array
+    {
+        return $this->createQueryBuilder('facture')
+            ->andWhere('facture.mois = :mois')
+            ->setParameter('mois', $month)
+            ->andWhere('facture.envoiResultat IS NOT NULL')
+            ->andWhere('facture.envoiResultat != :ok')
+            ->setParameter('ok', Facture::ENVOI_OK)
+            ->orderBy('facture.id', 'ASC')
+            ->getQuery()->getResult();
+    }
+
+    public function countSentByMonth(string $month): int
+    {
+        return (int) $this->createQueryBuilder('facture')
+            ->select('COUNT(facture.id)')
+            ->andWhere('facture.mois = :mois')
+            ->setParameter('mois', $month)
+            ->andWhere('facture.envoyeLe IS NOT NULL')
+            ->getQuery()->getSingleScalarResult();
     }
 
     /**

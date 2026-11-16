@@ -42,6 +42,8 @@ class Facture implements TimestampableInterface, UuidableInterface, FactureInter
     use UserAddTrait;
     use CommunicationTrait;
 
+    public const string ENVOI_OK = 'ok';
+
     #[ORM\ManyToOne(targetEntity: Tuteur::class, inversedBy: 'factures')]
     private ?Tuteur $tuteur = null;
     /**
@@ -59,6 +61,17 @@ class Facture implements TimestampableInterface, UuidableInterface, FactureInter
     private ?DateTimeInterface $envoyeLe = null;
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $envoyeA = null;
+    /**
+     * Résultat de l'envoi par mail : null tant que rien n'est tranché,
+     * self::ENVOI_OK si le mail est parti, sinon le message d'erreur.
+     */
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $envoiResultat = null;
+    /**
+     * Nombre d'envois refusés par le serveur de mail (erreurs passagères retentées).
+     */
+    #[ORM\Column(type: 'smallint', options: ['default' => 0])]
+    private int $envoiTentatives = 0;
     #[ORM\Column(type: 'string', length: 100, nullable: false)]
     private ?string $mois = null;
     #[ORM\Column(type: 'string', nullable: true)]
@@ -138,6 +151,44 @@ class Facture implements TimestampableInterface, UuidableInterface, FactureInter
     public function setEnvoyeA(?string $envoyeA): self
     {
         $this->envoyeA = $envoyeA;
+
+        return $this;
+    }
+
+    public function getEnvoiResultat(): ?string
+    {
+        return $this->envoiResultat;
+    }
+
+    public function setEnvoiResultat(?string $envoiResultat): self
+    {
+        $this->envoiResultat = $envoiResultat;
+
+        return $this;
+    }
+
+    public function hasEnvoiErreur(): bool
+    {
+        return null !== $this->envoiResultat && self::ENVOI_OK !== $this->envoiResultat;
+    }
+
+    public function getEnvoiTentatives(): int
+    {
+        return $this->envoiTentatives;
+    }
+
+    public function incrementEnvoiTentatives(): int
+    {
+        return ++$this->envoiTentatives;
+    }
+
+    /**
+     * Remet la facture dans la file d'envoi (relance après correction).
+     */
+    public function resetEnvoi(): self
+    {
+        $this->envoiResultat = null;
+        $this->envoiTentatives = 0;
 
         return $this;
     }
