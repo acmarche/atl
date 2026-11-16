@@ -65,7 +65,7 @@ final class UserType extends AbstractType
                 PasswordType::class,
                 [
                     'label' => 'Mot de passe',
-                    'help' => 'Minimum 6 caractères',
+                    'help' => 'Minimum 12 caractères, minuscule, majuscule et chiffre',
                     // instead of being set onto the object directly,
                     // this is read and encoded in the controller
                     'mapped' => false,
