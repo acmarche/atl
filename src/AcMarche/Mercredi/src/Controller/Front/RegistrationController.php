@@ -45,7 +45,7 @@ final class RegistrationController extends AbstractController
             }
 
             $recaptcha = new ReCaptcha($this->reCaptchaSecretKey);
-            $response = $recaptcha->verify($request->get('g-recaptcha-response'), $request->getClientIp());
+            $response = $recaptcha->verify($request->request->getString('g-recaptcha-response'), $request->getClientIp());
             if (!$response->isSuccess()) {
                 $this->addFlash('danger', 'Filtre anti-spam invalide.');
 
