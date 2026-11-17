@@ -1,9 +1,5 @@
 {% extends '@AcMarcheMercredi/email/body.html.twig' %}
-{% block subject %}
-    <p class="lead">
-        {{ email.subject }}
-    </p>
-{% endblock %}
+{% block subject %}{{ email.subject }}{% endblock %}
 
 {% block content %}
 
@@ -11,15 +7,9 @@
     <br/><br/>
     Un compte vient d'être ouvert à votre nom sur le site <a
     href="{{ absolute_url(path('mercredi_front_home')) }}">{{ absolute_url(path('mercredi_front_home')) }}</a>.
-    <br/><br/>
-
-    <div class="alert alert-info">
-        <a href="{{ tokenUrl }}">
-            Utilisez ce lien pour vous connecter et compléter vos informations.
-        </a>
-    </div>
-
-    <br/><br/>
+    <p style="margin: 24px 0">
+        <a href="{{ tokenUrl }}" class="btn btn-primary">Me connecter et compléter mes informations</a>
+    </p>
     Afin de pouvoir valider votre inscription, vous devez
     <br/><br/>
     <a href="{{ absolute_url(path('mercredi_parent_tuteur_edit')) }}">Remplir vos coordonnées</a>

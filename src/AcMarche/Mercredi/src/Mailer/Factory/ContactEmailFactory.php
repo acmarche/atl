@@ -25,6 +25,7 @@ class ContactEmailFactory
                 [
                     'body' => $body,
                     'courriel' => $email,
+                    'organisation' => $this->organisation,
                 ]
             );
 

@@ -1,9 +1,5 @@
 {% extends '@AcMarcheMercredi/email/body.html.twig' %}
-{% block subject %}
-    <p class="lead">
-        {{ email.subject }}
-    </p>
-{% endblock %}
+{% block subject %}{{ email.subject }}{% endblock %}
 
 {% block content %}
 
@@ -15,14 +11,8 @@
     <br/>
     <br/>
     Si ce n'est pas vous, vous pouvez ignorer ce mail.
-    <br/>
-    <br/>
-    <div class="alert alert-info">
-        <a href="{{ tokenUrl }}">
-            Utilisez ce lien pour vous connecter
-        </a>
-    </div>
-
-    <br/>
+    <p style="margin: 24px 0 0">
+        <a href="{{ tokenUrl }}" class="btn btn-primary">Me connecter</a>
+    </p>
 
 {% endblock %}

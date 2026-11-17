@@ -1,24 +1,14 @@
 {% extends '@AcMarcheMercredi/email/body.html.twig' %}
-{% block subject %}
-    <p class="lead">
-        {{ email.subject }}
-    </p>
-{% endblock %}
+{% block subject %}{{ email.subject }}{% endblock %}
 
 {% block content %}
 
     Cher animateur, chère animatrice,
     <br><br>
     Un compte vient d'être ouvert à votre nom sur le site internet {{ absolute_url(path('mercredi_front_home')) }}
-    <br><br>
-
-    <div class="alert alert-info">
-        <a href="{{ tokenUrl }}">
-            Utilisez ce lien pour vous connecter.
-        </a>
-    </div>
-
-    <br/><br/>
+    <p style="margin: 24px 0">
+        <a href="{{ tokenUrl }}" class="btn btn-primary">Me connecter</a>
+    </p>
     Vous pouvez aussi vous connecter sur le site avec vos identifiants :
     <br><br>
     Nom d'utilisateur: {{ user.email }}
