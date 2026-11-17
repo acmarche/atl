@@ -5,9 +5,10 @@
 {% endblock %}
 
 {% block brand %}
+    {% set organisation_name = render(path('mercredi_organisation_title'))|trim %}
     <a class="navbar-brand" href="{{ path('mercredi_front_home') }}">
-        <i class="fas fa-frog icon-rose d-inline-block align-text-top"></i>
-        <span class="ms-2 fs-4 navbar-text">Mercredi</span>
+        <i class="fas fa-frog icon-rose d-inline-block align-text-top" aria-hidden="true"></i>
+        <span class="ms-2 fs-4 navbar-text">{{ organisation_name ?: 'Accueil Temps Libre' }}</span>
     </a>
 {% endblock %}
 

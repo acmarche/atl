@@ -1,6 +1,6 @@
 {% extends '@AcMarcheMercredi/front/layout.html.twig' %}
 
-{% block title %}Se connecter{% endblock %}
+{% block title %}Se connecter{% if organisation is not null and organisation.nom %} · {{ organisation.nom }}{% endif %}{% endblock %}
 
 {% block stylesheets %}
     <link href="{{ asset('bundles/acmarchemercredi/css/signin.css') }}" rel="stylesheet">
@@ -9,14 +9,14 @@
 {% block body %}
     {% set password_failed = error is not null %}
     <div class="login">
-        <div class="login-card">
+        <div class="login-card" data-controller="login-method">
 
             {% include '@AcMarcheMercredi/security/_login_header.html.twig' with {
                 heading: 'Se connecter',
                 lead: 'à votre espace parent',
             } %}
 
-            {# Email link: the default way in #}
+            {# Email link: the default way in. Steps aside while the password form is open. #}
             <section class="login-section" aria-labelledby="login-link-title">
                 <h2 id="login-link-title" class="login-section-title">Recevoir un lien de connexion</h2>
                 <p class="login-hint">
@@ -29,10 +29,11 @@
                         <input type="email" name="email" id="login-email" value="{{ email }}"
                                class="form-control form-control-lg{{ email_error ? ' is-invalid' }}"
                                autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false"
-                               required
-                               {% if email_error %}aria-invalid="true" aria-describedby="login-email-error" autofocus{% endif %}>
+                               required data-login-method-target="email"
+                               {% if email_error %}aria-invalid="true" aria-describedby="login-email-error"{% endif %}
+                               {% if not password_failed %}autofocus{% endif %}>
                         {% if email_error %}
-                            <p id="login-email-error" class="invalid-feedback d-block mb-0">{{ email_error }}</p>
+                            <p id="login-email-error" class="login-error mt-2 mb-0">{{ email_error }}</p>
                         {% endif %}
                     </div>
                     <button class="btn btn-primary btn-lg w-100" type="submit"
@@ -44,11 +45,17 @@
             </section>
 
             {# Password: secondary, revealed on demand #}
-            <details class="login-alt" {% if password_failed %}open{% endif %}>
-                <summary class="login-alt-toggle">J'ai un mot de passe</summary>
+            <details class="login-alt" {% if password_failed %}open{% endif %}
+                     data-login-method-target="details" data-action="toggle->login-method#toggle">
+                <summary class="login-alt-toggle">
+                    <span class="login-alt-closed">J'ai un mot de passe</span>
+                    <span class="login-alt-open">Recevoir plutôt un lien par e-mail</span>
+                </summary>
 
                 <form method="post" action="{{ path('app_login') }}" class="login-alt-body"
+                      aria-labelledby="login-password-title"
                       data-controller="submit-busy" data-action="submit-busy#submit">
+                    <h2 id="login-password-title" class="login-section-title mb-3">Avec votre mot de passe</h2>
                     {% if password_failed %}
                         <p id="login-password-error" class="login-error">
                             {% if error.messageKey == 'Invalid credentials.' %}
@@ -61,30 +68,31 @@
                     <div class="mb-3">
                         <label for="login-username" class="form-label">Adresse e-mail ou nom d'utilisateur</label>
                         <input type="text" name="username" id="login-username" value="{{ last_username }}"
-                               class="form-control{{ password_failed ? ' is-invalid' }}"
+                               class="form-control form-control-lg{{ password_failed ? ' is-invalid' }}"
                                autocomplete="username" autocapitalize="none" spellcheck="false" required
+                               data-login-method-target="username"
                                {% if password_failed %}aria-invalid="true" aria-describedby="login-password-error"{% endif %}>
                     </div>
                     <div class="mb-2" data-controller="password-visibility">
                         <label for="login-password" class="form-label">Mot de passe</label>
-                        <div class="input-group">
+                        <div class="input-group input-group-lg">
                             <input type="password" name="password" id="login-password"
-                                   class="form-control{{ password_failed ? ' is-invalid' }}"
+                                   class="form-control form-control-lg{{ password_failed ? ' is-invalid' }}"
                                    autocomplete="current-password" required
-                                   data-password-visibility-target="input"
+                                   data-password-visibility-target="input" data-login-method-target="password"
                                    {% if password_failed %}aria-invalid="true" aria-describedby="login-password-error" autofocus{% endif %}>
                             <button type="button" class="btn btn-outline-secondary login-reveal" hidden
                                     data-password-visibility-target="toggle"
                                     data-action="password-visibility#toggle"
-                                    aria-controls="login-password" aria-label="Afficher le mot de passe">
-                                Afficher
+                                    aria-controls="login-password" aria-pressed="false">
+                                Afficher<span class="visually-hidden"> le mot de passe</span>
                             </button>
                         </div>
                     </div>
                     <p class="mb-3 text-end">
                         <a href="{{ path('mercredi_front_forgot_password_request') }}" class="login-link">Mot de passe perdu&#8239;?</a>
                     </p>
-                    <button class="btn btn-outline-primary w-100" type="submit"
+                    <button class="btn btn-primary btn-lg w-100" type="submit"
                             data-submit-busy-target="button" data-busy-label="Connexion…">
                         Me connecter
                     </button>

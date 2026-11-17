@@ -23,7 +23,7 @@
             {% endif %}
 
             {% if organisation.telephone or organisation.telephoneBureau %}
-                <i class="fas fa-phone-alt"></i> {{ organisation.telephone }} {{ organisation.telephoneBureau }}
+                <i class="fas fa-phone-alt" aria-hidden="true"></i> {{ organisation.telephone }}{% if organisation.telephone and organisation.telephoneBureau %} · {% endif %}{{ organisation.telephoneBureau }}
                 <br/>
             {% endif %}
 

@@ -78,7 +78,7 @@ class UserEmailFactory
         $message = TemplatedEmailFactory::asPublicEmailJf();
         $message
             ->subject('Connexion à votre compte pour '.$this->organisation->getNom())
-            ->from($this->getEmailSenderAddress())
+            ->from(new Address($this->getEmailSenderAddress(), $this->organisation->getNom()))
             ->to($user->getEmail())
             ->htmlTemplate('@AcMarcheMercrediEmail/welcome/_mail_auto_login.html.twig')
             ->context(

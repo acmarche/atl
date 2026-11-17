@@ -18,6 +18,7 @@
     {% block head %}{% endblock %}
 </head>
 <body class="d-flex flex-column h-100 {% block body_class %}{% endblock %}">
+<a href="#main" class="skip-link visually-hidden-focusable">Aller au contenu</a>
 <!-- Top nav bar -->
 <nav class="navbar navbar-expand-lg {% if is_granted('IS_IMPERSONATOR') %}
     navbar-dark bg-dark
@@ -58,7 +59,7 @@
     </div>
 </nav>
 <!-- Begin page content -->
-<main role="main" class="flex-shrink-0">
+<main role="main" id="main" tabindex="-1" class="flex-shrink-0">
     <div class="{% block container_class %}container{% endblock %} pt-3">
 
         {% include '@AcMarcheMercredi/_flash_messages.html.twig' %}

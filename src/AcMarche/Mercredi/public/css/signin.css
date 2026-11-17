@@ -91,7 +91,8 @@
     align-items: center;
     gap: 0.5rem;
     min-height: 3rem;
-    padding: 0.75rem 0;
+    margin-inline: -0.5rem;
+    padding: 0.75rem 0.5rem;
     color: var(--login-link);
     font-weight: 500;
     cursor: pointer;
@@ -132,21 +133,79 @@
     padding-bottom: 0.5rem;
 }
 
+.login-alt-open,
+.login-alt[open] .login-alt-closed {
+    display: none;
+}
+
+.login-alt[open] .login-alt-open {
+    display: inline;
+}
+
+/* One primary action at a time: the link section steps aside while the password form is open. */
+.login-card:has(.login-alt[open]) .login-section {
+    display: none;
+}
+
+.login-card:has(.login-alt[open]) .login-alt {
+    margin-top: 0;
+    border-top: 0;
+}
+
+.login-card:has(.login-alt[open]) .login-alt-toggle {
+    margin-bottom: 0.5rem;
+}
+
 .login-reveal {
     min-width: 5.5rem;
+    font-size: 1rem;
+}
+
+.login-reveal.active {
+    background: var(--bs-secondary-bg);
+    color: var(--login-ink);
+    border-color: var(--bs-border-color);
+}
+
+/* keep the reveal button visually attached to an invalid field */
+.login .input-group .is-invalid + .login-reveal {
+    border-color: var(--bs-form-invalid-border-color);
 }
 
 /* Errors: next to the fields they concern */
 .login-error {
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
     border: 1px solid #f1aeb5;
     border-radius: 8px;
     background: #fdf2f3;
     color: #a51d2d;               /* 6.2:1 on the tint */
 }
 
-/* Link-sent steps */
+/* Link-sent page */
+.login-success {
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #a3cfbb;
+    border-radius: 8px;
+    background: #f0f8f4;
+    color: #0a5c36;               /* 7.4:1 on the tint */
+    text-align: center;
+}
+
+.login-note {
+    margin-bottom: 1.5rem;
+    color: var(--login-muted);
+    font-size: 0.9375rem;
+}
+
+.login-note strong {
+    color: var(--login-ink);
+    font-weight: 600;
+}
+
+
 .login-steps {
     margin: 0 0 1.5rem;
     padding-left: 1.25rem;
@@ -183,7 +242,8 @@
     overflow-wrap: anywhere;
 }
 
-.login-link[href^='tel:'] {
+.login-link[href^='tel:'],
+.login-foot .login-link {
     white-space: nowrap;
 }
 

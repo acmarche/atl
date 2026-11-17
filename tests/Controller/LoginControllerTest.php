@@ -68,25 +68,36 @@ final class LoginControllerTest extends WebTestCase
         // the password form stays folded until the parent asks for it
         self::assertNull($crawler->filter('details.login-alt')->attr('open'));
         self::assertSelectorExists('a[href="/register"]');
+        self::assertSelectorExists('a.skip-link[href="#main"]');
+        self::assertSame('', $crawler->filter('#login-email')->attr('autofocus'));
+        // one primary button visible at a time; the password one only shows inside the open disclosure
+        self::assertCount(1, $crawler->filter('.login-section .btn-primary'));
     }
 
     public function testEmptyAddressIsExplainedNextToTheField(): void
     {
-        $crawler = $this->postEmail('');
+        $this->postEmail('');
 
-        self::assertResponseStatusCodeSame(422);
+        // Post/Redirect/Get: a refresh must not re-post the form
+        self::assertResponseRedirects('/login', 303);
+        $crawler = $this->client->followRedirect();
         self::assertSelectorTextContains('#login-email-error', 'Indiquez votre adresse e-mail.');
         self::assertSame('true', $crawler->filter('#login-email')->attr('aria-invalid'));
     }
 
     public function testMalformedAddressIsKeptAndExplained(): void
     {
-        $crawler = $this->postEmail('jean.dupont');
+        $this->postEmail('jean.dupont');
 
-        self::assertResponseStatusCodeSame(422);
+        self::assertResponseRedirects('/login', 303);
+        $crawler = $this->client->followRedirect();
         self::assertSelectorTextContains('#login-email-error', 'ne semble pas complète');
         self::assertSame('jean.dupont', $crawler->filter('#login-email')->attr('value'));
         self::assertSelectorTextNotContains('body', 'exception');
+
+        // the error is shown once: a reload starts clean
+        $this->client->request('GET', '/login');
+        self::assertSelectorNotExists('#login-email-error');
     }
 
     public function testUnknownAddressGetsTheSameConfirmationAsAKnownOne(): void
@@ -100,6 +111,14 @@ final class LoginControllerTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Vérifiez votre boîte mail');
         self::assertSelectorTextContains('.login-email', 'personne@exemple.invalid');
         self::assertSelectorExists('form[action="/login/with/email"] input[name="email"][value="personne@exemple.invalid"]');
+        self::assertSelectorNotExists('.login-success');
+
+        // "Renvoyer le lien" confirms the resend with its time
+        $crawler = $this->client->getCrawler();
+        $this->client->submit($crawler->filter('form[action="/login/with/email"]')->form());
+        self::assertResponseRedirects('/login/lien-envoye');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.login-success', 'Lien renvoyé à');
 
         // "Modifier l'adresse" brings the parent back with the address filled in
         $crawler = $this->client->request('GET', '/login');

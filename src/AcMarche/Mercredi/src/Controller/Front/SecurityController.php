@@ -19,6 +19,10 @@ final class SecurityController extends AbstractController
 {
     /** Session key holding the address a login link was last requested for. */
     public const LINK_EMAIL_SESSION_KEY = 'login_link_email';
+    /** Session key holding the email-form error, read once by the login page. */
+    public const LINK_ERROR_SESSION_KEY = 'login_link_error';
+    /** Session key holding the time a link was re-sent, read once by the link-sent page. */
+    public const LINK_RESENT_SESSION_KEY = 'login_link_resent_at';
 
     public function __construct(
         private readonly UserRepository $userRepository,
@@ -37,10 +41,18 @@ final class SecurityController extends AbstractController
             return $this->redirectToRoute('mercredi_front_profile_redirect');
         }
 
-        return $this->renderLogin(
-            passwordError: $authenticationUtils->getLastAuthenticationError(),
-            lastUsername: $authenticationUtils->getLastUsername(),
-            email: (string) $request->getSession()->get(self::LINK_EMAIL_SESSION_KEY, ''),
+        $session = $request->getSession();
+        $emailError = $session->remove(self::LINK_ERROR_SESSION_KEY);
+
+        return $this->render(
+            '@AcMarcheMercredi/security/login.html.twig',
+            [
+                'last_username' => $authenticationUtils->getLastUsername(),
+                'error' => $authenticationUtils->getLastAuthenticationError(),
+                'email' => (string) $session->get(self::LINK_EMAIL_SESSION_KEY, ''),
+                'email_error' => \is_string($emailError) ? $emailError : null,
+                'organisation' => $this->organisationRepository->getOrganisation(),
+            ],
         );
     }
 
@@ -50,20 +62,18 @@ final class SecurityController extends AbstractController
         $email = trim((string) $request->request->get('email', $request->request->get('username', '')));
 
         if (!$this->isCsrfTokenValid('authenticate', (string) $request->request->get('_csrf_token'))) {
-            return $this->renderLogin(
-                email: $email,
-                emailError: 'La page a expiré. Veuillez réessayer.',
-            );
+            return $this->backToLogin($request, $email, 'La page a expiré. Veuillez réessayer.');
         }
 
         if ('' === $email) {
-            return $this->renderLogin(emailError: 'Indiquez votre adresse e-mail.');
+            return $this->backToLogin($request, $email, 'Indiquez votre adresse e-mail.');
         }
 
-        if (!$this->isValidEmail($email)) {
-            return $this->renderLogin(
-                email: $email,
-                emailError: "Cette adresse e-mail ne semble pas complète. Vérifiez-la, par exemple\u{00A0}: prenom.nom@exemple.be",
+        if (false === filter_var($email, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE)) {
+            return $this->backToLogin(
+                $request,
+                $email,
+                "Cette adresse e-mail ne semble pas complète. Vérifiez-la, par exemple\u{00A0}: prenom.nom@exemple.be",
             );
         }
 
@@ -79,14 +89,19 @@ final class SecurityController extends AbstractController
             } catch (\Throwable $exception) {
                 $this->logger->error('Login link could not be sent: '.$exception->getMessage(), ['exception' => $exception]);
 
-                return $this->renderLogin(
-                    email: $email,
-                    emailError: 'Le message n\'a pas pu être envoyé. Réessayez dans quelques minutes, ou connectez-vous avec votre mot de passe.',
+                return $this->backToLogin(
+                    $request,
+                    $email,
+                    'Le message n\'a pas pu être envoyé. Réessayez dans quelques minutes, ou connectez-vous avec votre mot de passe.',
                 );
             }
         }
 
-        $request->getSession()->set(self::LINK_EMAIL_SESSION_KEY, $email);
+        $session = $request->getSession();
+        $session->set(self::LINK_EMAIL_SESSION_KEY, $email);
+        if ($request->request->getBoolean('resend')) {
+            $session->set(self::LINK_RESENT_SESSION_KEY, (new \DateTimeImmutable())->format('H:i'));
+        }
 
         return $this->redirectToRoute('app_login_link_sent');
     }
@@ -94,7 +109,8 @@ final class SecurityController extends AbstractController
     #[Route(path: '/login/lien-envoye', name: 'app_login_link_sent', methods: ['GET'])]
     public function linkSent(Request $request): Response
     {
-        $email = $request->getSession()->get(self::LINK_EMAIL_SESSION_KEY);
+        $session = $request->getSession();
+        $email = $session->get(self::LINK_EMAIL_SESSION_KEY);
 
         if (!\is_string($email) || '' === $email) {
             return $this->redirectToRoute('app_login');
@@ -102,6 +118,7 @@ final class SecurityController extends AbstractController
 
         return $this->render('@AcMarcheMercredi/security/link_sent.html.twig', [
             'email' => $email,
+            'resent_at' => $session->remove(self::LINK_RESENT_SESSION_KEY),
             'organisation' => $this->organisationRepository->getOrganisation(),
         ]);
     }
@@ -114,27 +131,15 @@ final class SecurityController extends AbstractController
         );
     }
 
-    private function isValidEmail(string $email): bool
+    /**
+     * Post/Redirect/Get: the error is shown on /login, so a refresh never re-posts the form.
+     */
+    private function backToLogin(Request $request, string $email, string $error): Response
     {
-        return false !== filter_var($email, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE);
-    }
+        $session = $request->getSession();
+        $session->set(self::LINK_EMAIL_SESSION_KEY, $email);
+        $session->set(self::LINK_ERROR_SESSION_KEY, $error);
 
-    private function renderLogin(
-        ?\Throwable $passwordError = null,
-        string $lastUsername = '',
-        string $email = '',
-        ?string $emailError = null,
-    ): Response {
-        return $this->render(
-            '@AcMarcheMercredi/security/login.html.twig',
-            [
-                'last_username' => $lastUsername,
-                'error' => $passwordError,
-                'email' => $email,
-                'email_error' => $emailError,
-                'organisation' => $this->organisationRepository->getOrganisation(),
-            ],
-            new Response(status: null !== $emailError ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK),
-        );
+        return $this->redirectToRoute('app_login', [], Response::HTTP_SEE_OTHER);
     }
 }

@@ -1,16 +1,17 @@
 {% extends '@AcMarcheMercredi/front/layout.html.twig' %}
 
-{% block title %}Vérifiez votre boîte mail{% endblock %}
+{% block title %}Vérifiez votre boîte mail{% if organisation is not null and organisation.nom %} · {{ organisation.nom }}{% endif %}{% endblock %}
 
 {% block stylesheets %}
     <link href="{{ asset('bundles/acmarchemercredi/css/signin.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
+    {% set org_name = organisation is not null and organisation.nom ? organisation.nom : null %}
     <div class="login">
         <div class="login-card">
             <header class="login-header">
-                <span class="login-mark" aria-hidden="true"><i class="fas fa-envelope-open-text"></i></span>
+                <span class="login-mark" aria-hidden="true"><i class="fas fa-envelope"></i></span>
                 <h1 class="login-title">Vérifiez votre boîte mail</h1>
                 <p class="login-lead">
                     Si un compte correspond à<br>
@@ -19,17 +20,30 @@
                 </p>
             </header>
 
+            {% if resent_at %}
+                <p class="login-success" role="status">Lien renvoyé à {{ resent_at|replace({':': 'h'}) }}.</p>
+            {% endif %}
+
             <ol class="login-steps">
-                <li>Ouvrez le message «&nbsp;Connexion à votre compte&nbsp;».</li>
-                <li>Cliquez sur le lien&#8239;: vous serez connecté directement.</li>
-                <li>Rien reçu après quelques minutes&#8239;? Regardez dans le dossier courrier indésirable (spam).</li>
+                <li>
+                    Ouvrez le message
+                    «&nbsp;Connexion à votre compte{% if org_name %} pour {{ org_name }}{% endif %}&nbsp;»{% if org_name %}, envoyé par {{ org_name }}{% endif %}.
+                </li>
+                <li>Cliquez sur le lien&#8239;: vous serez connecté directement. Vous pouvez fermer cette page.</li>
             </ol>
+
+            <p class="login-note">
+                <strong>Rien reçu après quelques minutes&#8239;?</strong>
+                Regardez dans le dossier courrier indésirable (spam). Si vous n'avez pas encore de compte, aucun message n'est envoyé&#8239;:
+                <a href="{{ path('mercredi_front_register') }}" class="login-link">créez votre compte</a>.
+            </p>
 
             <form method="post" action="{{ path('app_login_with_email') }}" data-turbo="false"
                   data-controller="submit-busy" data-action="submit-busy#submit">
                 <input type="hidden" name="email" value="{{ email }}">
+                <input type="hidden" name="resend" value="1">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                <button class="btn btn-outline-primary w-100" type="submit"
+                <button class="btn btn-outline-primary btn-lg w-100" type="submit"
                         data-submit-busy-target="button" data-busy-label="Envoi en cours…">
                     Renvoyer le lien
                 </button>
@@ -37,8 +51,6 @@
 
             <p class="login-foot">
                 Ce n'est pas la bonne adresse&#8239;? <a href="{{ path('app_login') }}" class="login-link">Modifier l'adresse</a>
-                <br>
-                Pas encore de compte&#8239;? <a href="{{ path('mercredi_front_register') }}" class="login-link">Créer un compte</a>
             </p>
         </div>
 
