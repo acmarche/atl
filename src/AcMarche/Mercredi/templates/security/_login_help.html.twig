@@ -1,0 +1,12 @@
+{% if organisation is not null and (organisation.email or organisation.telephone or organisation.gsm) %}
+    <p class="login-help">
+        Un souci pour vous connecter&#8239;? Contactez-nous
+        {%- if organisation.telephone or organisation.gsm %}
+            au <a href="tel:{{ (organisation.telephone ?: organisation.gsm)|replace({' ': '', '/': '', '.': ''}) }}" class="login-link">{{ organisation.telephone ?: organisation.gsm }}</a>
+        {%- endif %}
+        {%- if organisation.email %}
+            {%- if organisation.telephone or organisation.gsm %} ou{% endif %}
+            à <a href="mailto:{{ organisation.email }}" class="login-link">{{ organisation.email }}</a>
+        {%- endif %}.
+    </p>
+{% endif %}

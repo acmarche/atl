@@ -1,0 +1,47 @@
+{% extends '@AcMarcheMercredi/front/layout.html.twig' %}
+
+{% block title %}Vérifiez votre boîte mail{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('bundles/acmarchemercredi/css/signin.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="login">
+        <div class="login-card">
+            <header class="login-header">
+                <span class="login-mark" aria-hidden="true"><i class="fas fa-envelope-open-text"></i></span>
+                <h1 class="login-title">Vérifiez votre boîte mail</h1>
+                <p class="login-lead">
+                    Si un compte correspond à<br>
+                    <strong class="login-email">{{ email }}</strong><br>
+                    un lien de connexion vient d'y être envoyé.
+                </p>
+            </header>
+
+            <ol class="login-steps">
+                <li>Ouvrez le message «&nbsp;Connexion à votre compte&nbsp;».</li>
+                <li>Cliquez sur le lien&#8239;: vous serez connecté directement.</li>
+                <li>Rien reçu après quelques minutes&#8239;? Regardez dans le dossier courrier indésirable (spam).</li>
+            </ol>
+
+            <form method="post" action="{{ path('app_login_with_email') }}" data-turbo="false"
+                  data-controller="submit-busy" data-action="submit-busy#submit">
+                <input type="hidden" name="email" value="{{ email }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                <button class="btn btn-outline-primary w-100" type="submit"
+                        data-submit-busy-target="button" data-busy-label="Envoi en cours…">
+                    Renvoyer le lien
+                </button>
+            </form>
+
+            <p class="login-foot">
+                Ce n'est pas la bonne adresse&#8239;? <a href="{{ path('app_login') }}" class="login-link">Modifier l'adresse</a>
+                <br>
+                Pas encore de compte&#8239;? <a href="{{ path('mercredi_front_register') }}" class="login-link">Créer un compte</a>
+            </p>
+        </div>
+
+        {% include '@AcMarcheMercredi/security/_login_help.html.twig' %}
+    </div>
+{% endblock %}

@@ -1,0 +1,9 @@
+<header class="login-header">
+    <span class="login-mark" aria-hidden="true"><i class="fas fa-frog"></i></span>
+    <h1 class="login-title">{{ heading }}</h1>
+    {% if lead is defined and lead %}
+        <p class="login-lead">
+            {{ lead }}{% if organisation is not null and organisation.nom %}<br><span class="login-org">{{ organisation.nom }}</span>{% endif %}
+        </p>
+    {% endif %}
+</header>

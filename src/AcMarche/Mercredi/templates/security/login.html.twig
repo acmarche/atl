@@ -1,93 +1,102 @@
 {% extends '@AcMarcheMercredi/front/layout.html.twig' %}
 
-{% block title %}Me connecter{% endblock %}
+{% block title %}Se connecter{% endblock %}
 
 {% block stylesheets %}
     <link href="{{ asset('bundles/acmarchemercredi/css/signin.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
-    <div class="container cjfs">
-        <div class="row justify-content-center">
-            <div class="col-12">
-                <div class="login-container mx-auto">
+    {% set password_failed = error is not null %}
+    <div class="login">
+        <div class="login-card">
 
-                    <!-- Error Alert -->
-                    {% if error %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            {{ error.messageKey|trans(error.messageData, 'security') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
+            {% include '@AcMarcheMercredi/security/_login_header.html.twig' with {
+                heading: 'Se connecter',
+                lead: 'à votre espace parent',
+            } %}
+
+            {# Email link: the default way in #}
+            <section class="login-section" aria-labelledby="login-link-title">
+                <h2 id="login-link-title" class="login-section-title">Recevoir un lien de connexion</h2>
+                <p class="login-hint">
+                    Pas besoin de mot de passe&#8239;: nous vous envoyons un lien par e-mail, il suffit de cliquer dessus.
+                </p>
+                <form method="post" action="{{ path('app_login_with_email') }}" data-turbo="false" novalidate
+                      data-controller="submit-busy" data-action="submit-busy#submit">
+                    <div class="mb-3">
+                        <label for="login-email" class="form-label">Votre adresse e-mail</label>
+                        <input type="email" name="email" id="login-email" value="{{ email }}"
+                               class="form-control form-control-lg{{ email_error ? ' is-invalid' }}"
+                               autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false"
+                               required
+                               {% if email_error %}aria-invalid="true" aria-describedby="login-email-error" autofocus{% endif %}>
+                        {% if email_error %}
+                            <p id="login-email-error" class="invalid-feedback d-block mb-0">{{ email_error }}</p>
+                        {% endif %}
+                    </div>
+                    <button class="btn btn-primary btn-lg w-100" type="submit"
+                            data-submit-busy-target="button" data-busy-label="Envoi en cours…">
+                        Recevoir le lien
+                    </button>
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                </form>
+            </section>
+
+            {# Password: secondary, revealed on demand #}
+            <details class="login-alt" {% if password_failed %}open{% endif %}>
+                <summary class="login-alt-toggle">J'ai un mot de passe</summary>
+
+                <form method="post" action="{{ path('app_login') }}" class="login-alt-body"
+                      data-controller="submit-busy" data-action="submit-busy#submit">
+                    {% if password_failed %}
+                        <p id="login-password-error" class="login-error">
+                            {% if error.messageKey == 'Invalid credentials.' %}
+                                Identifiant ou mot de passe incorrect. Vérifiez votre saisie, ou recevez plutôt un lien par e-mail.
+                            {% else %}
+                                {{ error.messageKey|trans(error.messageData, 'security') }}
+                            {% endif %}
+                        </p>
                     {% endif %}
-
-                    <!-- Logo and Title -->
-                    <div class="logo-container">
-                        <img class="mb-3" src="{{ asset('bundles/acmarchemercredi/images/favicon/favicon-96x96.png') }}"
-                             alt="Adl" width="72" height="57">
-                        <h2 class="main-title">Authentifiez-vous</h2>
+                    <div class="mb-3">
+                        <label for="login-username" class="form-label">Adresse e-mail ou nom d'utilisateur</label>
+                        <input type="text" name="username" id="login-username" value="{{ last_username }}"
+                               class="form-control{{ password_failed ? ' is-invalid' }}"
+                               autocomplete="username" autocapitalize="none" spellcheck="false" required
+                               {% if password_failed %}aria-invalid="true" aria-describedby="login-password-error"{% endif %}>
                     </div>
-
-                    <!-- Email Login Section -->
-                    <div class="form-section">
-                        <h4><i class="fas fa-envelope me-2"></i>Via votre adresse mail</h4>
-                        <form method="post" action="{{ path('app_login_with_email') }}" data-turbo="false">
-                            <div class="form-floating">
-                                <input type="email" value="{{ last_username }}" name="username"
-                                       class="form-control" id="emailInput"
-                                       placeholder="votre@email.com" required>
-                                <label for="emailInput">
-                                    <i class="fas fa-envelope me-2"></i>Votre adresse mail
-                                </label>
-                            </div>
-                            <button class="w-100 btn btn-custom btn-primary-custom" type="submit">
-                                <i class="fas fa-paper-plane me-2"></i>Envoyer le lien
+                    <div class="mb-2" data-controller="password-visibility">
+                        <label for="login-password" class="form-label">Mot de passe</label>
+                        <div class="input-group">
+                            <input type="password" name="password" id="login-password"
+                                   class="form-control{{ password_failed ? ' is-invalid' }}"
+                                   autocomplete="current-password" required
+                                   data-password-visibility-target="input"
+                                   {% if password_failed %}aria-invalid="true" aria-describedby="login-password-error" autofocus{% endif %}>
+                            <button type="button" class="btn btn-outline-secondary login-reveal" hidden
+                                    data-password-visibility-target="toggle"
+                                    data-action="password-visibility#toggle"
+                                    aria-controls="login-password" aria-label="Afficher le mot de passe">
+                                Afficher
                             </button>
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                        </form>
+                        </div>
                     </div>
+                    <p class="mb-3 text-end">
+                        <a href="{{ path('mercredi_front_forgot_password_request') }}" class="login-link">Mot de passe perdu&#8239;?</a>
+                    </p>
+                    <button class="btn btn-outline-primary w-100" type="submit"
+                            data-submit-busy-target="button" data-busy-label="Connexion…">
+                        Me connecter
+                    </button>
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                </form>
+            </details>
 
-                    <!-- Divider -->
-                    <div class="divider">
-                        <span>OU</span>
-                    </div>
-
-                    <!-- Password Login Section -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-key me-2"></i>Avec votre mot de passe</h3>
-                        <form method="post" action="{{ path('app_login') }}">
-                            <div class="form-floating">
-                                <input type="text" value="{{ last_username }}" name="username"
-                                       class="form-control" id="usernameInput"
-                                       placeholder="jdupont" required>
-                                <label for="usernameInput">
-                                    <i class="fas fa-user me-2"></i>Nom d'utilisateur
-                                </label>
-                            </div>
-                            <div class="form-floating">
-                                <input type="password" name="password" class="form-control"
-                                       id="passwordInput" placeholder="Mot de passe" required>
-                                <label for="passwordInput">
-                                    <i class="fas fa-lock me-2"></i>Mot de passe
-                                </label>
-                            </div>
-                            <button class="w-100 btn btn-custom btn-primary-custom" type="submit">
-                                <i class="fas fa-sign-in-alt me-2"></i>Me connecter
-                            </button>
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                        </form>
-                    </div>
-
-                    <!-- Forgot Password Link -->
-                    <div class="text-end">
-                        <a href="{{ path('mercredi_front_forgot_password_request') }}" class="forgot-password">
-                            <i class="fas fa-question-circle me-1"></i>Mot de passe perdu?
-                        </a>
-                    </div>
-
-                </div>
-            </div>
+            <p class="login-foot">
+                Pas encore de compte&#8239;? <a href="{{ path('mercredi_front_register') }}" class="login-link">Créer un compte</a>
+            </p>
         </div>
-    </div>
 
+        {% include '@AcMarcheMercredi/security/_login_help.html.twig' %}
+    </div>
 {% endblock %}

@@ -52,7 +52,7 @@ final class RegisterCreatedHandler
         $message = $this->registrationMailerFactory->generateMessageToAdminAccountCreated($user);
         $this->notificationMailer->sendAsEmailNotification($message);
         $flashBag = $this->requestStack->getSession()?->getFlashBag();
-        $flashBag->add('success', 'Votre compte a bien été créé, consultez votre boite mail');
+        $flashBag->add('success', 'Votre compte a bien été créé, consultez votre boîte mail');
     }
 
     /**
