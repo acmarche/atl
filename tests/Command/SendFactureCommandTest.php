@@ -12,12 +12,12 @@ use Symfony\Component\Lock\Store\FlockStore;
 
 final class SendFactureCommandTest extends KernelTestCase
 {
-    public function testRunsHandlerAndSendsReport(): void
+    public function testRunsHandlerWithoutSendingReport(): void
     {
         $result = [['message' => 'count 3']];
         $handler = $this->createMock(FactureCronHandler::class);
         $handler->expects(self::once())->method('execute')->with(25)->willReturn($result);
-        $handler->expects(self::once())->method('sendResult')->with($result);
+        $handler->expects(self::never())->method('sendResult');
 
         $tester = $this->createTester($handler);
 

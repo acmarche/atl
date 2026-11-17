@@ -69,7 +69,9 @@ class SendFactureCommand extends Command
             $io->writeln($line['message'] ?? $line['error']);
         }
 
-        if ([] !== $result) {
+        // Le résumé de fin de FactureCron suffit : un rapport n'est envoyé que si le
+        // traitement a planté, sinon ce lot (et tous les suivants) passerait inaperçu
+        if ($failed) {
             try {
                 $this->factureCronHandler->sendResult($result);
             } catch (\Throwable $exception) {
