@@ -7,9 +7,3 @@ when@dev:
         mailer:
             envelope:
                 recipients: [ 'webmaster@marche.be' ]
-when@prod:
-    framework:
-        mailer:
-            envelope:
-                recipients: [ 'webmaster@marche.be' ]
-
